@@ -11,8 +11,7 @@ import com.siva.multicastdnsresolutionandroid.utils.WifiState
 import java.util.*
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
-    private val tag = MainViewModel::class.java.simpleName
-    var nsdServiceInfo = MutableLiveData<NsdServiceInfo>()
+
     private val context: Context = getApplication<Application>().applicationContext
 
     /**
@@ -21,17 +20,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      * */
     private fun getWifiState(): WifiState {
 
-        val wifiManager =
-            context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+        val wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
         return if (wifiManager.isWifiEnabled) {
             return if (wifiManager.connectionInfo.bssid != null) {
                 WifiState.Connected
             } else {
-                ToastMessage.show(context,"Wifi not connected")
+                ToastMessage.show(context, "Wifi not connected")
                 WifiState.EnabledNotConnected
             }
         } else {
-            ToastMessage.show(context,"Wifi disabled")
+            ToastMessage.show(context, "Wifi disabled")
             WifiState.Disabled
         }
     }
@@ -39,25 +37,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     /**
      * Returns true if we are connected to a WiFi network
      */
-     fun isWifiConnected(): Boolean {
+    fun isWifiConnected(): Boolean {
         return (getWifiState() == WifiState.Connected)
-    }
-
-
-     fun getWifiConnectedIPAddress(): String {
-
-        val wifiManager =
-            getApplication<Application>().applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
-
-        //return Formatter.formatIpAddress(wifiManager.connectionInfo.ipAddress)
-        val ipAddress = wifiManager.dhcpInfo.netmask
-        val addressAsString = String.format(
-            Locale.US, "%d.%d.%d.%d",
-            ipAddress and 0xff,
-            ipAddress shr 8 and 0xff,
-            ipAddress shr 16 and 0xff,
-            ipAddress shr 24 and 0xff
-        )
-        return addressAsString
     }
 }

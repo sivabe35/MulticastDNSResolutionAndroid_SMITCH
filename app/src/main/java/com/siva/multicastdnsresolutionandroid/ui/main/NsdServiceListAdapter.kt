@@ -12,15 +12,13 @@ import com.siva.multicastdnsresolutionandroid.model.NSDServiceInfo
 import kotlinx.android.synthetic.main.nsd_service_info_item.view.*
 import java.util.*
 
-class NsdServiceListAdapter(val context: Context?, var serviceInfoList: ArrayList<NSDServiceInfo>) :
+class NsdServiceListAdapter(val context: Context?, private var serviceInfoList: ArrayList<NSDServiceInfo>) :
     RecyclerView.Adapter<NsdServiceListAdapter.ViewHolder>() {
 
 
     inner class ViewHolder(parent: ViewGroup) : RecyclerView.ViewHolder(
         DataBindingUtil.inflate<NsdServiceInfoItemBinding>(
-            LayoutInflater.from(context), R.layout.nsd_service_info_item, parent, false
-        ).root
-    ) {
+            LayoutInflater.from(context), R.layout.nsd_service_info_item, parent, false).root) {
         @SuppressLint("SetTextI18n")
         fun bind(serviceInfoItem: NSDServiceInfo) {
 

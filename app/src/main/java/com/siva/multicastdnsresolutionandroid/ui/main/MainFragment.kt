@@ -30,8 +30,8 @@ class MainFragment : Fragment(), NsdServiceDiscoveryInterface {
     private lateinit var mainBinding: MainFragmentBinding
     private lateinit var nsdHelper: NSDHelper
 
-    private val serviceName="SMITCH_mDNS_SERVICE"
-    private val port=80
+    private val serviceName = "SMITCH_mDNS_SERVICE"
+    private val port = 80
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -50,10 +50,8 @@ class MainFragment : Fragment(), NsdServiceDiscoveryInterface {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
-        mainBinding.lifecycleOwner = this
-        mainBinding.multicastDNSViewModel = viewModel
-
         nsdHelper = NSDHelper(context, this)
+
         mainBinding.rvServiceList.isNestedScrollingEnabled = false
         mainBinding.rvServiceList.setHasFixedSize(true)
         mainBinding.rvServiceList.layoutManager =
@@ -62,18 +60,14 @@ class MainFragment : Fragment(), NsdServiceDiscoveryInterface {
             NsdServiceListAdapter(context, ArrayList<NSDServiceInfo>())
 
         mainBinding.btnPublish.setOnClickListener {
-//            if (viewModel.isWifiConnected())
-                nsdHelper.registerService(port, serviceName)
+            //if (viewModel.isWifiConnected())
+            nsdHelper.registerService(port, serviceName)
         }
 
         mainBinding.btnScan.setOnClickListener {
+//            if (viewModel.isWifiConnected())
             nsdHelper.discoverServices()
         }
-
-
-        viewModel.nsdServiceInfo.observe(viewLifecycleOwner, Observer {
-
-        })
     }
 
 

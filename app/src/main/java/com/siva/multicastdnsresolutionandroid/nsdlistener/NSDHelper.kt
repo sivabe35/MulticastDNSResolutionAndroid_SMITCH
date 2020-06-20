@@ -20,29 +20,14 @@ class NSDHelper(val context: Context?, val nsdServiceInterface: NsdServiceDiscov
     private var mServiceName: String? = null
     private var registrationListener: NsdManager.RegistrationListener? = null
     private var discoveryListener: NsdManager.DiscoveryListener? = null
-    private val resolveListener = object : NsdManager.ResolveListener {
 
-        override fun onResolveFailed(serviceInfo: NsdServiceInfo, errorCode: Int) {
-            // Called when the resolve fails. Use the error code to debug.
-            Log.e(TAG, "onResolveFailed: $errorCode")
-        }
 
-        override fun onServiceResolved(serviceInfo: NsdServiceInfo) {
-            Log.e(TAG, "onServiceResolved: $serviceInfo")
-
-//            if (serviceInfo.serviceName == mServiceName) {
-//                Log.d(TAG, "Same IP.")
-//                return
-//            }
-            mService = serviceInfo
-
-            nsdServiceInterface.onNsdServiceInfoFound(mService)
-
-        }
-    }
-
+    /**
+     * Register mDNS Service
+     *
+     *  Cancel any previous registration request
+     * */
     fun registerService(_port: Int, _serviceName: String) {
-        // Cancel any previous registration request
         unRegister()
         initializeRegistrationListener()
 
@@ -60,82 +45,93 @@ class NSDHelper(val context: Context?, val nsdServiceInterface: NsdServiceDiscov
         registrationListener = object : NsdManager.RegistrationListener {
 
             override fun onServiceRegistered(NsdServiceInfo: NsdServiceInfo) {
-                // Save the service name. Android may have changed it in order to
-                // resolve a conflict, so update the name you initially requested
-                // with the name Android actually used.
-                mServiceName = NsdServiceInfo.serviceName
 
+                mServiceName = NsdServiceInfo.serviceName
                 Log.d(TAG, "onServiceRegistered : $mServiceName")
-                ToastMessage.show(context,"Service registered")
+                ToastMessage.show(context, "Service registered")
             }
 
             override fun onRegistrationFailed(serviceInfo: NsdServiceInfo, errorCode: Int) {
-                ToastMessage.show(context,"Service registration failed")
+                ToastMessage.show(context, "Service registration failed")
                 Log.d(TAG, "onRegistrationFailed with error code : $errorCode")
             }
 
             override fun onServiceUnregistered(arg0: NsdServiceInfo) {
-                // Service has been unregistered. This only happens when you call
-                // NsdManager.unregisterService() and pass in this listener.
                 Log.d(TAG, "onServiceUnregistered : ${arg0.serviceName}")
-                ToastMessage.show(context,"Service unregistered")
+                ToastMessage.show(context, "Service unregistered")
 
             }
 
             override fun onUnregistrationFailed(serviceInfo: NsdServiceInfo, errorCode: Int) {
-                // Unregistration failed. Put debugging code here to determine why.
                 Log.d(TAG, "onUnregistrationFailed with error code : $errorCode")
-                ToastMessage.show(context,"Service un-registration failed")
+                ToastMessage.show(context, "Service un-registration failed")
 
             }
         }
     }
 
+    /**
+     *  Start Discover mDNS Service listener
+     *
+     *  Cancel any previous Discover listener registered
+     * */
     fun discoverServices() {
-        // Cancel any existing discovery request
         stopDiscovery()
         initializeDiscoveryListener()
 
         nsdManager.discoverServices(SERVICE_TYPE, NsdManager.PROTOCOL_DNS_SD, discoveryListener)
     }
 
+    /**
+     * Discovery Listener to check Service status
+     * */
     private fun initializeDiscoveryListener() {
         discoveryListener = object : NsdManager.DiscoveryListener {
 
-            // Called as soon as service discovery begins.
             override fun onDiscoveryStarted(regType: String) {
                 Log.d(TAG, "Service discovery started")
             }
 
             override fun onServiceFound(service: NsdServiceInfo) {
-                // A service was found! Do something with it.
                 Log.i(TAG, "Service discovery success$service")
 
+
                 when {
-                    service.serviceType != SERVICE_TYPE &&
-                            service.serviceType != SERVICE_TYPE_WITH_DOT ->
-                        // Service type is the string containing the protocol and
-                        // transport layer for this service.
+                    service.serviceType != SERVICE_TYPE && service.serviceType != SERVICE_TYPE_WITH_DOT ->
                         Log.d(TAG, "Unknown Service Type: ${service.serviceType}")
 
-                    service.serviceName == mServiceName -> {
-                        // The name of the service tells the user what they'd be
-                        // connecting to. It could be "Bob's Chat App".
-                        Log.d(TAG, "Same machine: $mServiceName")
+                    service.serviceName.contains("SMITCH_mDNS_SERVICE",true) ->{
 
-                        nsdManager.resolveService(service, resolveListener)
+                        nsdManager.resolveService(
+                            service,
+                            object : NsdManager.ResolveListener {
+
+                                override fun onResolveFailed(serviceInfo: NsdServiceInfo, errorCode: Int) {
+                                    Log.e(TAG, "onResolveFailed: $errorCode")
+                                }
+
+                                override fun onServiceResolved(serviceInfo: NsdServiceInfo) {
+                                    Log.e(TAG, "onServiceResolved: $serviceInfo")
+
+                                    //if (serviceInfo.serviceName == mServiceName) {
+                                    //    Log.d(TAG, "Same IP.")
+                                    //    return
+                                    //}
+                                    mService = serviceInfo
+                                    nsdServiceInterface.onNsdServiceInfoFound(mService)
+
+                                }
+                            })
+
                     }
-                 }
+                }
             }
 
             override fun onServiceLost(service: NsdServiceInfo) {
-                // When the network service is no longer available.
-                // Internal bookkeeping code goes here.
                 Log.e(TAG, "service lost: $service")
                 if (mService == service) {
                     mService = null
                 }
-
             }
 
             override fun onDiscoveryStopped(serviceType: String) {
@@ -153,6 +149,7 @@ class NSDHelper(val context: Context?, val nsdServiceInterface: NsdServiceDiscov
             }
         }
     }
+
 
     fun tearDown() {
         unRegister()
